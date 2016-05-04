@@ -2,29 +2,27 @@ require 'pry'
 require './secret_code.rb'
 require './instructions.rb'
 
-# need to pipe in instructions
-# need to be able to exit anywhere
-# need to be able to cheat
-# need to return all illegal letters at once
-# need to skip counter when too short or long
-# need to be able to loop through 8 guesses
-# need to exit after 8 guesses
-# need to return the closing statement
+# need to be able to exit anywhere - using it twice
+# need to return all illegal letters at once - it returns one at a time
+# need to be able to loop through 8 guesses without calling the method 8 times
 #need a timer
+# need to finish the closing statement
+#how to play again or quit from the match and inform method
 
 class Mastermind
 
   def initialize
     @secret_code = SecretCode.new.secret_code
     puts @secret_code
-    @instructions = Instructions.new.instructions
     @input
     @guesses = 0
   end
 
+  CHAR_SET = ["w", "p", "g", "y", "r", "b"]
+
   def welcome
     puts "\nWelcome to MASTERMIND\n\nWould you like to (p)lay, read the (i)nstructions, or (q)uit?\n\n"
-    @input = gets.chomp
+    @input = gets.chomp.downcase
   end
 
   def getting_started
@@ -37,15 +35,12 @@ class Mastermind
         puts "Would you like to (p)lay, read the (i)nstructions, or (q)uit?\n"
         input = gets.chomp
       when input == "q"
-        puts "\nYou're a quitter.\n"
-        exit
-      when input == "c"
-        puts secret_code.inspect
+        puts "\nAw, man, YOU QUIT!\n\n"
         exit
       when input == "i"
-        puts "Enter (p)play when you are ready to go."
-        puts @instructions
-        input = gets.chomp
+        puts Instructions.new.instructions
+        puts "\nEnter (p)lay when you are ready to play."
+        input = gets.chomp.downcase
       when input == "p"
         ready_to_play = true
       end
@@ -58,39 +53,41 @@ class Mastermind
   end
 
   def guess
-    @guesses += 1
-    if @guesses > 8
-      puts "That is 8 guesses. You're a loser."
-    else
-      input = @input
-      guess_complete = false
-      until guess_complete
-        case
-        when input.size < 4
-          puts "That's not enough. Choose at exactly 4 valid colors:"
-          input = gets.chomp.downcase.chars
-        when input.size > 4
-          puts "That's too many. Choose exactly 4 valid colors:"
-          input = gets.chomp.downcase.chars
-        when input.each do |letter|
-            if ["w", "p", "g", "y", "r", "b"].include?(letter) == false
-              puts "\n'#{letter}' is not a valid color. Enter 4 valid colors:"
-              input = gets.chomp.downcase.chars
-            else
-              guess_complete = true
-            end
+    input = @input
+    guess_complete = false
+    until guess_complete
+      case
+      when input == ["q"]
+        puts "\nAw, man, YOU QUIT!\n\n"
+        exit
+      when input == ["c"]
+        puts "\nHere's the secret code you cheater: #{@secret_code.inspect}\n"
+        exit
+      when input.size < 4
+        puts "That's not enough. Choose at exactly 4 valid colors:"
+        input = gets.chomp.downcase.chars
+      when input.size > 4
+        puts "That's too many. Choose exactly 4 valid colors:"
+        input = gets.chomp.downcase.chars
+      when input.each do |letter|
+          if CHAR_SET.include?(letter) == false
+            puts "\n'#{letter}' is not a valid color. Enter 4 valid colors:"
+            input = gets.chomp.downcase.chars
+      else
+          guess_complete = true
           end
         end
       end
-      puts input.inspect
     end
   end
 
   def match_and_inform
+    @guesses += 1
     input = @input
     perfect_matches = 0
       if input == @secret_code
-        puts "\nTHAT'S CORRECT! You win you dirty bastard!\n\n"
+        puts "\nCongratulations! You guessed the sequence '#{input.join.upcase}' in #{@guesses} guesses over 4 minutes,
+        22 seconds.\n\nDo you want to (p)lay again or (q)uit?\n\n"
         exit
       else
         combined_letters = input & @secret_code
@@ -101,9 +98,13 @@ class Mastermind
             perfect_matches += 1
           end
         end
-        puts "\nCorrect color, wrong position: #{matches}\n"
-        puts "\nCorrect color, correct position: #{perfect_matches}\n"
-        puts "\nThat was guess number #{@guesses} of 8. Guess again:\n\n"
+        puts "\n'#{input.join.upcase}' has #{matches + perfect_matches} of the correct elements with #{perfect_matches} in the correct position(s)."
+          if @guesses < 8
+            puts "\nYou've taken #{@guesses} guess(es).\n\n"
+          elsif @guesses == 8
+            puts "\nThat's 8 guesses. GAME OVER!\n\n"
+            exit
+          end
         @input = gets.chomp.downcase.chars
       end
     end
@@ -113,6 +114,14 @@ mastermind = Mastermind.new
 mastermind.welcome
 mastermind.getting_started
 mastermind.code_generated_message
+mastermind.guess
+mastermind.match_and_inform
+mastermind.guess
+mastermind.match_and_inform
+mastermind.guess
+mastermind.match_and_inform
+mastermind.guess
+mastermind.match_and_inform
 mastermind.guess
 mastermind.match_and_inform
 mastermind.guess

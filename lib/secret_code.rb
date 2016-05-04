@@ -1,4 +1,5 @@
 require 'pry'
+
 class SecretCode
   attr_reader :secret_code
 
